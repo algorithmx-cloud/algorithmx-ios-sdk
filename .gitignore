@@ -1,0 +1,9 @@
+# Swift Package Manager and Xcode state
+.build/
+.build-sandbox/
+.swiftpm/
+*.xcodeproj/xcuserdata/
+DerivedData/
+
+# Operating-system state
+.DS_Store
