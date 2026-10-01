@@ -1,6 +1,6 @@
 # AlgorithmX iOS SDK
 
-Connect your iOS app to [AlgorithmX](https://algorithmx.com), the campaign management and customer data platform. The SDK sends customer identity and events, handles AlgorithmX push notifications, routes campaign actions to your app, and shows in-app campaigns.
+Connect your iOS app to [AlgorithmX](https://algorithmx.cloud), the campaign management and customer data platform. The SDK sends customer identity and events, handles AlgorithmX push notifications, routes campaign actions to your app, and shows in-app campaigns.
 
 - iOS 15 or later, Xcode 15 or later
 - No third-party dependencies
@@ -41,7 +41,7 @@ AlgorithmX.shared.initialize(apiBaseUrl: "https://api.example.com")
 
 The integration guide covers the full setup: customer identity, events, push notifications, deep links, custom actions, and the notification service extension.
 
-**[iOS integration guide →](https://algorithmx.com/en/docs/integrations/ios)**
+**[iOS integration guide →](https://algorithmx.cloud/en/docs/integrations/ios)**
 
 ## License
 

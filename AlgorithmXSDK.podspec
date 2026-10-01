@@ -4,7 +4,7 @@ Pod::Spec.new do |s|
   s.summary       = 'AlgorithmX SDK for iOS: customer events, push notifications and in-app campaigns.'
   s.homepage      = 'https://github.com/algorithmx-cloud/algorithmx-ios-sdk'
   s.license       = { :type => 'MIT', :file => 'LICENSE' }
-  s.author        = { 'AlgorithmX' => 'hello@algorithmx.com' }
+  s.author        = { 'AlgorithmX' => 'hello@algorithmx.cloud' }
   s.platform      = :ios, '15.0'
   s.swift_version = '5.9'
 
