@@ -13,6 +13,7 @@ import UserNotifications
     // Written by AlgorithmX into the App Group, read here. This file must stay
     // self-contained: extensions (e.g. Flutter/RN apps) may compile it alone.
     static let sharedApiBaseUrlKey = "algorithmx.apiBaseUrl"
+    static let sharedPartnerIdKey = "algorithmx.partnerId"
     static let sharedFingerprintKey = "algorithmx.fingerprint"
 
     /// True for notifications sent by AlgorithmX. When your extension also serves
@@ -41,7 +42,7 @@ import UserNotifications
 
     /// Same as above, and reports "delivered" and the impression of the visible
     /// notification, like Android does when it posts one. Pass the App Group that
-    /// the app gave to `AlgorithmX.shared.initialize(apiBaseUrl:appGroup:)`.
+    /// the app gave to `AlgorithmX.shared.initialize(apiBaseUrl:partnerId:appGroup:)`.
     @objc public static func processNotification(
         request: UNNotificationRequest,
         bestAttemptContent: UNMutableNotificationContent,
@@ -90,6 +91,7 @@ import UserNotifications
         guard let appGroup = appGroup,
               let defaults = UserDefaults(suiteName: appGroup),
               let apiUrl = defaults.string(forKey: sharedApiBaseUrlKey), !apiUrl.isEmpty,
+              let partnerId = defaults.string(forKey: sharedPartnerIdKey), !partnerId.isEmpty,
               let fingerprint = defaults.string(forKey: sharedFingerprintKey), !fingerprint.isEmpty
         else { completion(); return }
 
@@ -102,7 +104,7 @@ import UserNotifications
                     "fingerprintDevice": fingerprint,
                     "status": 2 // Delivered
                 ],
-                group: group
+                partnerId: partnerId, group: group
             )
         }
         if let campaignId = userInfo["algo_campaign_id"] as? String {
@@ -123,7 +125,10 @@ import UserNotifications
                let json = String(data: data, encoding: .utf8) {
                 body["Payload"] = json
             }
-            send("\(apiUrl)/api/v1/tracks/algo_view_interact", method: "POST", body: body, group: group)
+            send(
+                "\(apiUrl)/api/v1/tracks/algo_view_interact", method: "POST", body: body,
+                partnerId: partnerId, group: group
+            )
         }
         // The extension may be stopped once the content is handed back, so wait
         // (briefly) for the requests first.
@@ -133,12 +138,15 @@ import UserNotifications
         }
     }
 
-    private static func send(_ endpoint: String, method: String, body: [String: Any], group: DispatchGroup) {
+    private static func send(
+        _ endpoint: String, method: String, body: [String: Any], partnerId: String, group: DispatchGroup
+    ) {
         guard let url = URL(string: endpoint),
               let data = try? JSONSerialization.data(withJSONObject: body) else { return }
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(partnerId, forHTTPHeaderField: "x-partner-id")
         request.httpBody = data
         group.enter()
         URLSession.shared.dataTask(with: request) { _, _, error in

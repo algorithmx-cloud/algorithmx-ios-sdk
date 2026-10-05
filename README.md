@@ -19,7 +19,7 @@ https://github.com/algorithmx-cloud/algorithmx-ios-sdk
 Or in `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/algorithmx-cloud/algorithmx-ios-sdk", from: "1.0.0")
+.package(url: "https://github.com/algorithmx-cloud/algorithmx-ios-sdk", from: "1.0.1")
 ```
 
 ### CocoaPods
@@ -27,7 +27,7 @@ Or in `Package.swift`:
 Install the pod from its Git tag:
 
 ```ruby
-pod 'AlgorithmXSDK', :git => 'https://github.com/algorithmx-cloud/algorithmx-ios-sdk.git', :tag => '1.0.0'
+pod 'AlgorithmXSDK', :git => 'https://github.com/algorithmx-cloud/algorithmx-ios-sdk.git', :tag => '1.0.1'
 ```
 
 ## Quick start
@@ -36,8 +36,10 @@ pod 'AlgorithmXSDK', :git => 'https://github.com/algorithmx-cloud/algorithmx-ios
 import AlgorithmXSDK
 
 // In application(_:didFinishLaunchingWithOptions:)
-AlgorithmX.shared.initialize(apiBaseUrl: "https://api.example.com")
+AlgorithmX.shared.initialize(apiBaseUrl: "https://api.example.com", partnerId: "your-partner-id")
 ```
+
+AlgorithmX gives you the API base URL and your partner ID. The SDK sends the partner ID in the `x-partner-id` header of every request.
 
 The integration guide covers the full setup: customer identity, events, push notifications, deep links, custom actions, and the notification service extension.
 

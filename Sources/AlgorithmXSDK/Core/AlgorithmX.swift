@@ -47,9 +47,11 @@ import UserNotifications
 
     // MARK: - Initialization
 
-    /// Safe to call more than once: later calls only update the base URL.
-    @objc public func initialize(apiBaseUrl: String) {
+    /// Safe to call more than once: later calls only update the base URL and partner ID.
+    /// `partnerId` is sent as the `x-partner-id` header on every request.
+    @objc public func initialize(apiBaseUrl: String, partnerId: String) {
         self.apiUrl = apiBaseUrl.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        NetworkClient.shared.partnerId = partnerId
         if initialized { shareConfigWithExtension(); return }
         initialized = true
         self.dispatcher = EventDispatcher.shared
@@ -79,14 +81,14 @@ import UserNotifications
     }
 
     /**
-     Same as `initialize(apiBaseUrl:)`, and shares the backend URL and user id with
-     the Notification Service Extension through the App Group, so the extension can
-     report "delivered" and the impression of visible notifications (like Android).
-     Pass the same App Group to `EngageNotificationService.processNotification`.
+     Same as `initialize(apiBaseUrl:partnerId:)`, and shares the backend URL, partner ID
+     and user id with the Notification Service Extension through the App Group, so the
+     extension can report "delivered" and the impression of visible notifications (like
+     Android). Pass the same App Group to `EngageNotificationService.processNotification`.
      */
-    @objc public func initialize(apiBaseUrl: String, appGroup: String) {
+    @objc public func initialize(apiBaseUrl: String, partnerId: String, appGroup: String) {
         self.appGroup = appGroup
-        initialize(apiBaseUrl: apiBaseUrl)
+        initialize(apiBaseUrl: apiBaseUrl, partnerId: partnerId)
     }
 
     deinit { NotificationCenter.default.removeObserver(self) }
@@ -97,6 +99,7 @@ import UserNotifications
     private func shareConfigWithExtension() {
         guard let appGroup = appGroup, let defaults = UserDefaults(suiteName: appGroup) else { return }
         defaults.set(apiUrl, forKey: EngageNotificationService.sharedApiBaseUrlKey)
+        defaults.set(NetworkClient.shared.partnerId, forKey: EngageNotificationService.sharedPartnerIdKey)
         defaults.set(resolveUserId(), forKey: EngageNotificationService.sharedFingerprintKey)
     }
 
