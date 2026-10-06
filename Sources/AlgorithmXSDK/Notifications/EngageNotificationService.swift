@@ -16,6 +16,75 @@ import UserNotifications
     static let sharedPartnerIdKey = "algorithmx.partnerId"
     static let sharedFingerprintKey = "algorithmx.fingerprint"
 
+    // Normalize only the SDK's push schema. Partner-owned data and action text
+    // retain their original keys and values; explicit camelCase keys win.
+    static func normalizedPushData(_ data: [String: Any]) -> [String: Any] {
+        var result = data
+        let aliases = [
+            ("engage_action", "engageAction"),
+            ("algo_campaign_id", "algoCampaignId"),
+            ("algo_notification_id", "algoNotificationId"),
+            ("engage_variation_id", "engageVariationId"),
+            ("engage_webview_url", "engageWebviewUrl"),
+            ("engage_user_id", "engageUserId"),
+            ("engage_dynamic_content", "engageDynamicContent"),
+            ("engage_meta_image_url", "engageMetaImageUrl"),
+            ("action_type", "actionType"),
+            ("action_buttons", "actionButtons"),
+            ("image_url", "imageUrl")
+        ]
+        for (legacy, canonical) in aliases {
+            if result[canonical] == nil { result[canonical] = result[legacy] }
+            result.removeValue(forKey: legacy)
+        }
+        if let action = result["engageAction"] as? String {
+            switch action {
+            case "algo_trigger_webview": result["engageAction"] = "algoTriggerWebview"
+            case "algo_show_notification": result["engageAction"] = "algoShowNotification"
+            default: break
+            }
+        }
+        if let action = result["actionType"] as? String {
+            switch action {
+            case "open_web_page": result["actionType"] = "openWebPage"
+            case "open_webview": result["actionType"] = "openWebview"
+            case "open_screen": result["actionType"] = "openScreen"
+            case "custom_action": result["actionType"] = "customAction"
+            default: break
+            }
+        }
+        if let buttons = result["actionButtons"] as? [[String: Any]] {
+            result["actionButtons"] = normalizedActionButtons(buttons)
+        } else if let raw = result["actionButtons"] as? String,
+                  let data = raw.data(using: .utf8),
+                  let buttons = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
+                  let normalized = try? JSONSerialization.data(withJSONObject: normalizedActionButtons(buttons)),
+                  let json = String(data: normalized, encoding: .utf8) {
+            result["actionButtons"] = json
+        }
+        return result
+    }
+
+    static func normalizedUserInfo(_ userInfo: [AnyHashable: Any]) -> [AnyHashable: Any] {
+        var data: [String: Any] = [:]
+        var result: [AnyHashable: Any] = [:]
+        for (key, value) in userInfo {
+            if let key = key as? String { data[key] = value }
+            else { result[key] = value }
+        }
+        for (key, value) in normalizedPushData(data) { result[key] = value }
+        return result
+    }
+
+    private static func normalizedActionButtons(_ buttons: [[String: Any]]) -> [[String: Any]] {
+        buttons.map { button in
+            var result = button
+            if result["actionText"] == nil { result["actionText"] = result["action_text"] }
+            result.removeValue(forKey: "action_text")
+            return result
+        }
+    }
+
     /// True for notifications sent by AlgorithmX. When your extension also serves
     /// another push provider, call `processNotification` only for these.
     @objc public static func isAlgorithmXPush(_ request: UNNotificationRequest) -> Bool {
@@ -23,8 +92,9 @@ import UserNotifications
     }
 
     @objc public static func isAlgorithmXPush(userInfo: [AnyHashable: Any]) -> Bool {
-        guard let action = userInfo["engage_action"] as? String else { return false }
-        return action == "algo_trigger_webview" || action == "algo_show_notification"
+        let userInfo = normalizedUserInfo(userInfo)
+        guard let action = userInfo["engageAction"] as? String else { return false }
+        return action == "algoTriggerWebview" || action == "algoShowNotification"
     }
 
     /// Process notification content in Notification Service Extension
@@ -49,7 +119,7 @@ import UserNotifications
         appGroup: String?,
         contentHandler: @escaping (UNNotificationContent) -> Void
     ) {
-        let userInfo = request.content.userInfo
+        let userInfo = normalizedUserInfo(request.content.userInfo)
         let finish: (Bool) -> Void = { hasImage in
             reportDelivery(
                 userInfo: userInfo, content: bestAttemptContent,
@@ -96,9 +166,9 @@ import UserNotifications
         else { completion(); return }
 
         let group = DispatchGroup()
-        if let idString = userInfo["algo_notification_id"] as? String, let notificationId = Int(idString) {
+        if let idString = userInfo["algoNotificationId"] as? String, let notificationId = Int(idString) {
             send(
-                "\(apiUrl)/api/v1/in-app-push-events/device/status", method: "PUT",
+                "\(apiUrl)/api/v1/inAppPushEvents/device/status", method: "PUT",
                 body: [
                     "notificationId": notificationId,
                     "fingerprintDevice": fingerprint,
@@ -107,26 +177,26 @@ import UserNotifications
                 partnerId: partnerId, group: group
             )
         }
-        if let campaignId = userInfo["algo_campaign_id"] as? String {
-            let variationId = userInfo["engage_variation_id"] as? String ?? "default"
+        if let campaignId = userInfo["algoCampaignId"] as? String {
+            let variationId = userInfo["engageVariationId"] as? String ?? "default"
             let impression: [String: Any] = [
-                "notification_type": "push",
+                "notificationType": "push",
                 "title": content.title,
                 "body": content.body,
-                "has_image": hasImage
+                "hasImage": hasImage
             ]
             var body: [String: Any] = [
-                "FingerprintDevice": fingerprint,
-                "CampaignId": Int(campaignId) ?? 0,
-                "VariationId": Int(variationId) ?? 0,
-                "InteractionType": "impression"
+                "fingerprintDevice": fingerprint,
+                "campaignId": Int(campaignId) ?? 0,
+                "variationId": Int(variationId) ?? 0,
+                "interactionType": "impression"
             ]
             if let data = try? JSONSerialization.data(withJSONObject: impression),
                let json = String(data: data, encoding: .utf8) {
-                body["Payload"] = json
+                body["payload"] = json
             }
             send(
-                "\(apiUrl)/api/v1/tracks/algo_view_interact", method: "POST", body: body,
+                "\(apiUrl)/api/v1/tracks/algoViewInteract", method: "POST", body: body,
                 partnerId: partnerId, group: group
             )
         }
@@ -161,7 +231,7 @@ import UserNotifications
 
     private static func parseActionButtons(from userInfo: [AnyHashable: Any]) -> [[String: Any]]? {
         // Try parsing from string
-        if let actionButtonsString = userInfo["action_buttons"] as? String,
+        if let actionButtonsString = userInfo["actionButtons"] as? String,
             let actionButtonsData = actionButtonsString.data(using: .utf8),
             let actionButtons = try? JSONSerialization.jsonObject(with: actionButtonsData)
                 as? [[String: Any]]
@@ -170,7 +240,7 @@ import UserNotifications
         }
 
         // Try parsing from array
-        if let actionButtons = userInfo["action_buttons"] as? [[String: Any]] {
+        if let actionButtons = userInfo["actionButtons"] as? [[String: Any]] {
             return actionButtons
         }
 
@@ -185,10 +255,10 @@ import UserNotifications
 
         var actions: [UNNotificationAction] = []
 
-        // Same rules as Android: at most 3 buttons, `title` and `action_text`
+        // Same rules as Android: at most 3 buttons, `title` and `actionText`
         // required, `id` defaults to action_<index>.
         for (index, button) in buttons.prefix(3).enumerated() {
-            guard let actionText = button["action_text"] as? String,
+            guard let actionText = button["actionText"] as? String,
                 let title = button["title"] as? String
             else {
                 continue
@@ -236,13 +306,11 @@ import UserNotifications
         var imageUrlString: String?
 
         // Check multiple possible keys
-        if let url = userInfo["image_url"] as? String {
+        if let url = userInfo["imageUrl"] as? String {
             imageUrlString = url
-        } else if let url = userInfo["engage_meta_image_url"] as? String {
+        } else if let url = userInfo["engageMetaImageUrl"] as? String {
             imageUrlString = url
         } else if let url = userInfo["image"] as? String {
-            imageUrlString = url
-        } else if let url = userInfo["imageUrl"] as? String {
             imageUrlString = url
         }
 
