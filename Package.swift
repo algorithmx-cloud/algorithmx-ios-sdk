@@ -19,6 +19,10 @@ let package = Package(
             path: "Sources/AlgorithmXSDK",
             // Apple privacy manifest: collected data and UserDefaults reasons.
             resources: [.copy("PrivacyInfo.xcprivacy")]
+        ),
+        .testTarget(
+            name: "AlgorithmXSDKTests",
+            dependencies: ["AlgorithmXSDK"]
         )
     ]
 )

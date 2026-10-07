@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.3
+
+- General `trackEvent` requests now use `POST /api/v1/Event/Log` with an array of `{ eventType, data, timestamp }` events and ISO 8601 UTC timestamps. Empty properties are sent as `{}`.
+- Event requests send the current SDK fingerprint in `X-Anonymous-Id`, alongside `x-partner-id`. Event names and custom data retain their supplied spelling.
+- Campaign/push interaction, identity, notification-status, and push-token endpoints retain their existing contracts.
+
 ## 1.0.2
 
 - Fixed notification endpoints now use `/api/v1/inAppPushEvents/device/status` and `/api/v1/notificationTokens` instead of `/api/v1/in-app-push-events/device/status` and `/api/v1/notification-tokens`. The backend must accept the new routes before this SDK release; the local test backend retains the previous routes as aliases. The `x-partner-id` header stays unchanged.

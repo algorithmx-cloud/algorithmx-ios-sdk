@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name          = 'AlgorithmXSDK'
-  s.version       = '1.0.2'
+  s.version       = '1.0.3'
   s.summary       = 'AlgorithmX SDK for iOS: customer events, push notifications and in-app campaigns.'
   s.homepage      = 'https://github.com/algorithmx-cloud/algorithmx-ios-sdk'
   s.license       = { :type => 'MIT', :file => 'LICENSE' }
@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
 
   # Same sources as Package.swift. CocoaPods trunk stops accepting new pods on
   # December 2, 2026, so apps install this pod from the Git tag:
-  #   pod 'AlgorithmXSDK', :git => 'https://github.com/algorithmx-cloud/algorithmx-ios-sdk.git', :tag => '1.0.2'
+  #   pod 'AlgorithmXSDK', :git => 'https://github.com/algorithmx-cloud/algorithmx-ios-sdk.git', :tag => '1.0.3'
   s.source        = { :git => 'https://github.com/algorithmx-cloud/algorithmx-ios-sdk.git', :tag => s.version.to_s }
   s.source_files  = 'Sources/AlgorithmXSDK/**/*.swift'
   # Apple privacy manifest: collected data and UserDefaults reasons.

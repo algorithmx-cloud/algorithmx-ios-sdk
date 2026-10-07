@@ -21,7 +21,7 @@ https://github.com/algorithmx-cloud/algorithmx-ios-sdk
 Or in `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/algorithmx-cloud/algorithmx-ios-sdk", from: "1.0.2")
+.package(url: "https://github.com/algorithmx-cloud/algorithmx-ios-sdk", from: "1.0.3")
 ```
 
 ### CocoaPods
@@ -29,7 +29,7 @@ Or in `Package.swift`:
 Install the pod from its Git tag:
 
 ```ruby
-pod 'AlgorithmXSDK', :git => 'https://github.com/algorithmx-cloud/algorithmx-ios-sdk.git', :tag => '1.0.2'
+pod 'AlgorithmXSDK', :git => 'https://github.com/algorithmx-cloud/algorithmx-ios-sdk.git', :tag => '1.0.3'
 ```
 
 ## Quick start
@@ -57,12 +57,12 @@ API URLs are the initialized `apiBaseUrl` plus the paths below. Every SDK API re
 | Method | Endpoint | Purpose |
 |---|---|---|
 | `POST` | `/api/v1/identify` | Identify the customer and send optional attributes. |
-| `POST` | `/api/v1/tracks/{eventName}` | Send a custom event with its original name and payload. |
+| `POST` | `/api/v1/Event/Log` | Send a custom event as an array with its original name and data. |
 | `POST` | `/api/v1/tracks/algoViewInteract` | Report campaign and push interactions. |
 | `PUT` | `/api/v1/inAppPushEvents/device/status` | Update notification delivery or open status. |
 | `POST` | `/api/v1/notificationTokens` | Register a push token for the current customer. |
 
-`{eventName}` is the custom name supplied to `trackEvent`; the SDK keeps it unchanged. Campaign HTML and notification images are downloaded with `GET` from their supplied URLs, so those downloads have no fixed SDK path. Campaign HTML may also load its own resources. A caller-supplied campaign interaction `endpoint` overrides the default interaction path.
+`trackEvent` keeps the custom name unchanged in `eventType`. Since 1.0.3, general events use `POST /api/v1/Event/Log`, a one-event array body, ISO 8601 UTC timestamps, and `X-Anonymous-Id` containing the current SDK fingerprint. `data` contains properties or `{}`; `x-partner-id` is also required. Campaign HTML and notification images are downloaded with `GET` from their supplied URLs, so those downloads have no fixed SDK path. Campaign HTML may also load its own resources. A caller-supplied campaign interaction `endpoint` overrides the default interaction path.
 
 The integration guide covers the full setup: customer identity, events, push notifications, deep links, custom actions, and the notification service extension.
 
