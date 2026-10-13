@@ -25,7 +25,7 @@ final class EventLogContractTests: XCTestCase {
             XCTAssertEqual(request.url?.path, "/api/v1/Event/Log")
             XCTAssertEqual(request.httpMethod, "POST")
             XCTAssertEqual(request.value(forHTTPHeaderField: "x-partner-id"), "test-partner")
-            XCTAssertEqual(request.value(forHTTPHeaderField: "X-Anonymous-Id"), "customer_123")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "X-Anonymous-Id"), "a781ba16-c6fb-469d-83fb-2d2cc0eb0057")
             let events = try! JSONSerialization.jsonObject(with: body) as! [[String: Any]]
             XCTAssertEqual(events.count, 1)
             let event = events[0]
@@ -44,7 +44,7 @@ final class EventLogContractTests: XCTestCase {
             received.fulfill()
         }
         NetworkClient.shared.partnerId = "test-partner"
-        AlgorithmX.shared.setDeviceFingerprint("customer_123")
+        AlgorithmX.shared.setDeviceFingerprint("a781ba16-c6fb-469d-83fb-2d2cc0eb0057")
         let request = AlgorithmX.shared.makeEventLogRequest("Purchase_COMPLETED/Custom", properties: properties)
         EventDispatcher.shared.send(
             endpoint: "https://sdk-test.invalid/api/v1/Event/Log", method: "POST",
